@@ -4,7 +4,7 @@
 --
 -- Create Date:   12:18:06 04/28/2020
 -- Design Name:   
--- Module Name:   C:/Users/Edneia/Desktop/matheus/Lab 5/ps2_keybord/ps2_keyboard_tb.vhd
+-- Module Name:   
 -- Project Name:  ps2_keybord
 -- Target Device:  
 -- Tool versions:  
