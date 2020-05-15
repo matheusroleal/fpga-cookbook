@@ -4,7 +4,7 @@
 --
 -- Create Date:   10:23:19 05/11/2020
 -- Design Name:   
--- Module Name:   C:/Users/Edneia/Desktop/matheus/Lab 6/rs232_rx/rs232_rx_tb.vhd
+-- Module Name:   
 -- Project Name:  rs232_rx
 -- Target Device:  
 -- Tool versions:  
