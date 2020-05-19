@@ -87,7 +87,7 @@ BEGIN
 	stim_proc: process
 	  variable K : natural;
 	begin
-	  K := 50;
+	  K := 115200;
 	  
 	  wait for CLOCK_period*9;
 	  BAUD_RATE <= std_logic_vector(to_unsigned(K, BAUD_RATE'length));

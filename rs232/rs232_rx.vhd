@@ -31,10 +31,10 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity rs232_rx is
 	port(
-		CLOCK			: in STD_LOGIC;
+		CLOCK		: in STD_LOGIC;
 		BIT_IN		: in STD_LOGIC;
 		BAUD_RATE	: in STD_LOGIC_VECTOR(12 downto 0);
-		WORD_OUT		: out STD_LOGIC_VECTOR(7 downto 0);
+		WORD_OUT	: out STD_LOGIC_VECTOR(7 downto 0);
 		RX_DONE		: out STD_LOGIC
 	);
 end rs232_rx;
@@ -66,12 +66,12 @@ begin
 		if(CLOCK'event and CLOCK ='1') then
 			 if(RECEIVING ='1')then
 				  if(SHIFT_FLAG ='1')then 
-						COUNTER <=(others=>'0');
+					COUNTER <=(others=>'0');
 				  else
-						COUNTER <= COUNTER +1;
+					COUNTER <= COUNTER +1;
 				  end if;
 			 else
-				  COUNTER <= (others=>'0');
+				COUNTER <= (others=>'0');
 			 end if;
 		end if;
 	end process;
@@ -86,22 +86,22 @@ begin
 			  case STATE is
 			  when idle =>
 					if(BIT_IN ='0')then
-						 RECEIVING    <= '1';
-						 STATE        <= startbit;
+						RECEIVING    <= '1';
+						STATE        <= startbit;
 					end if;
 			  when startbit =>
 					if(SHIFT_FLAG ='1')then
-						 BIT_COUNTER <= BIT_COUNTER +1;
-						 MESSAGE     <= BIT_IN &MESSAGE(9 downto 1);
-						 STATE       <= rxing;
+						BIT_COUNTER <= BIT_COUNTER +1;
+						MESSAGE     <= BIT_IN &MESSAGE(9 downto 1);
+						STATE       <= rxing;
 					end if;
 			  when rxing =>
 					if(SHIFT_FLAG ='1')then
 						 BIT_COUNTER <= BIT_COUNTER + 1;
 						 MESSAGE     <= BIT_IN & MESSAGE(9 downto 1);
 						 if(FINISH_FLAG ='1')then
-							  BIT_COUNTER  <= (others=>'0');
-							  STATE       	<= done;
+							BIT_COUNTER  <= (others=>'0');
+							STATE        <= done;
 						 end if;
 					end if;
 			  when done => 
