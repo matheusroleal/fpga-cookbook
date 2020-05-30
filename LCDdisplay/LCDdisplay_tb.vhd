@@ -45,7 +45,7 @@ ARCHITECTURE behavior OF LCDdisplay_tb IS
          lcd_rw : OUT  std_logic;
          lcd_rs : OUT  std_logic;
          lcd_e : OUT  std_logic;
-         sf_d : OUT  std_logic_vector(11 downto 8);
+         sf_d : OUT  std_logic_vector(11 downto 0);
          led_1 : OUT  std_logic;
          led_2 : OUT  std_logic;
          led_3 : OUT  std_logic
@@ -60,7 +60,7 @@ ARCHITECTURE behavior OF LCDdisplay_tb IS
    signal lcd_rw : std_logic;
    signal lcd_rs : std_logic;
    signal lcd_e : std_logic;
-   signal sf_d : std_logic_vector(11 downto 8);
+   signal sf_d : std_logic_vector(11 downto 0);
    signal led_1 : std_logic;
    signal led_2 : std_logic;
    signal led_3 : std_logic;
