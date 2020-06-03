@@ -142,7 +142,7 @@ begin
                             data_amp(0) <= SPI_MISO;
                             cont_recebendo <= cont_recebendo + 1;
                         when 33 =>
-                        cont_recebendo <= '0'
+								    cont_recebendo <= 0;
                         when others => 
                             AD_CONV <= '0';
                             cont_recebendo <= cont_recebendo + 1;
@@ -226,5 +226,5 @@ begin
             led(6) <= '1'; 
             led(7) <= '1';
         end if;
-    end proccess
+	  end process;
 end Behavioral;

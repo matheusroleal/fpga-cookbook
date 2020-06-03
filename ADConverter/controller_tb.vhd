@@ -4,11 +4,11 @@ USE ieee.std_logic_1164.ALL;
 -- Uncomment the following library declaration if using 
 -- arithmetic functions with Signed or Unsigned values 
 --USE ieee.numeric_std.ALL;
-ENTITY main_test IS END main_test;
-ARCHITECTURE behavior OF main_test IS
+ENTITY controller_tb IS END controller_tb;
+ARCHITECTURE behavior OF controller_tb IS
 
 -- Component Declaration for the Unit Under Test (UUT)
-COMPONENT Main 
+COMPONENT controller 
     PORT(
         clk : IN std_logic;
         SPI_MOSI:OUT std_logic;
@@ -45,7 +45,7 @@ constant clk_period : time := 10 ns;
 BEGIN
 -- Instantiate the Unit Under Test (UUT) 
 
-uut: Main PORT MAP (
+uut: controller PORT MAP (
                     clk => clk,
                     SPI_MOSI => SPI_MOSI, 
                     SPI_MISO => SPI_MISO, 
