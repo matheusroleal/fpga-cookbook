@@ -1,111 +1,83 @@
-LIBRARY ieee ;
-USE ieee.std_logic_1164.all ;
-USE ieee.std_logic_unsigned.all ;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.all;
+use IEEE.STD_LOGIC_SIGNED.all;
 
-ENTITY ula IS
-	PORT
-	(
-		operacao : IN STD_LOGIC_VECTOR (3 DOWNTO 0);
-		operA	: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		operB	: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-		Result	: buffer STD_LOGIC_VECTOR(7 DOWNTO 0);
-		Cin		: IN STD_LOGIC;
-		N,Z,C,B,V : buffer STD_LOGIC		
-	);
-END ula;
+entity ula is
+	port (	clk  			: IN  std_logic;
+			operando1 		: IN std_logic_vector(4 downto 0);
+			operando2 		: IN std_logic_vector(4 downto 0);
+			opcode 			: IN std_logic_vector(4 downto 0); -- opcode do comando atual a ser executado
+			start			: IN std_logic;
+			result 			: OUT std_logic_vector(4 downto 0); -- resultado da operacao
+			done 			: OUT std_logic;
+			zero_flag 		: OUT std_logic := '0';
+			negative_flag 	: OUT std_logic := '0');
+end ula;
 
-ARCHITECTURE Behavioral OF ula IS
-	constant ADIC : STD_LOGIC_VECTOR(3 DOWNTO 0):="0001";
-	constant SUB  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0010";
-	constant OU   : STD_LOGIC_VECTOR(3 DOWNTO 0):="0011";
-	constant E    : STD_LOGIC_VECTOR(3 DOWNTO 0):="0100";
-	constant NAO  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0101";
-	constant DLE  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0110";
-	constant DLD  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0111";
-	constant DAE  : STD_LOGIC_VECTOR(3 DOWNTO 0):="1000";
-	constant DAD  : STD_LOGIC_VECTOR(3 DOWNTO 0):="1001";
-BEGIN
-	process (operA, operB, operacao,result,Cin)
-	variable temp : STD_LOGIC_VECTOR(8 DOWNTO 0);
-	begin
-		case operacao is
-		when ADIC =>
-			temp := ('0'&operA) + ('0'&operB);
-			result <= temp(7 DOWNTO 0);
-			C <= temp(8);
-			if (operA(7)=operB(7)) then
-				if (operA(7) /= result(7)) then V <= '1';
-					else V <= '0';
-				end if;
-			else V <= '0';
+
+architecture Behavioral of ula is
+
+TYPE state_type IS (idle, processing, finish, set);
+SIGNAL pst : state_type := idle;
+SIGNAL temp_result : std_logic_vector (4 downto 0);
+
+begin
+	process(clk, start, pst, opcode, operando1, operando2) 
+		begin
+			if (rising_edge(clk)) then 
+				case pst is
+					when idle => 
+						if(start = '1') then
+							pst <= processing;
+							negative_flag <= '0';
+						end if;
+					when processing =>
+						case opcode is
+							when "00101" => temp_result <= (signed(operando1) + signed(operando2));		--A + B 
+									
+							when "00110" => temp_result <= (signed(operando1) - signed(operando2));		-- A - B
+							
+							when "00111" => temp_result <= operando1 AND operando2;						 	-- A AND B
+
+							when "01000" => temp_result <= operando1 OR operando2;						 	-- A OR B
+
+							when "01001" => temp_result <= operando1 XOR operando2;							-- A XOR B
+
+							when "01010" => temp_result <= NOT operando1;										-- NOT A
+
+							when "01011" => temp_result <= operando1 NAND operando2;							-- A NAND B
+
+							when "10000" => temp_result <= (signed(operando1) + 1);							-- INC A
+
+							when "10001" => temp_result <= (signed(operando2) + 1);							-- INC B
+
+							when "10010" => temp_result <= (signed(operando1) - 1);							-- DEC A
+
+							when "10011" => temp_result <= (signed(operando2) - 1);							-- DEC B
+
+							when others => temp_result <= "00000";
+						end case;
+						pst <= finish;
+
+					when finish =>
+						result <= temp_result;
+						done <= '1';
+						pst <= set;
+						negative_flag <= temp_result(4);
+						if (signed(temp_result) = 0) then
+							zero_flag <= '1';
+						else
+							zero_flag <= '0';
+						end if;
+						
+					when set =>
+						done <= '0';
+						pst <= idle;
+					
+					when others =>
+						pst <= idle;
+				end case;
 			end if;
-		when SUB =>
-			temp := ('0'&operA) - ('0'&operB);
-			result <= temp(7 DOWNTO 0);
-			B <= temp(8);
-			if (operA(7) /= operB(7)) then
-				if (operA(7) /= result(7)) then V <= '1';
-					else V <= '0';
-				end if;
-			else V <= '0';
-			end if;
-		when OU =>
-			result <= operA or operB;
-		when E =>
-			result <= operA and operB;
-		when NAO =>
-			result <= not operA;
-		when DLE =>
-			C <= operA(7);
-			result(7) <= operA(6);
-			result(6) <= operA(5);
-			result(5) <= operA(4);
-			result(4) <= operA(3);
-			result(3) <= operA(2);
-			result(2) <= operA(1);
-			result(1) <= operA(0);
-			result(0) <= Cin;
-		when DAE =>
-			C <= operA(7);
-			result(7) <= operA(6);
-			result(6) <= operA(5);
-			result(5) <= operA(4);
-			result(4) <= operA(3);
-			result(3) <= operA(2);
-			result(2) <= operA(1);
-			result(1) <= operA(0);
-			result(0) <= '0';
-		when DLD =>
-			C <= operA(0);
-			result(0) <= operA(1);
-			result(1) <= operA(2);
-			result(2) <= operA(3);
-			result(3) <= operA(4);
-			result(4) <= operA(5);
-			result(5) <= operA(6);
-			result(6) <= operA(7);
-			result(7) <= Cin;
-		when DAD =>
-			C <= operA(0);
-			result(0) <= operA(1);
-			result(1) <= operA(2);
-			result(2) <= operA(3);
-			result(3) <= operA(4);
-			result(4) <= operA(5);
-			result(5) <= operA(6);
-			result(6) <= operA(7);
-			result(7) <= '0';		
-		when others =>
-			result <= "00000000";
-			Z <= '0';
-			N <= '0';
-			C <= '0';
-			V <= '0';
-			B <= '0';
-		end case;
-		if (result="00000000") then 
-			Z <= '1'; else Z <= '0';
-		end if;
-		N <= result(7);
-	end process;
-END Behavioral;
+		end process;
+end Behavioral;

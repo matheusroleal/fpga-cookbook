@@ -1,87 +1,77 @@
-LIBRARY ieee ;
-USE ieee.std_logic_1164.all ;
-USE ieee.std_logic_unsigned.all ;
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
-ENTITY memoria IS
-	PORT
-	(
-		address_bus	: IN INTEGER RANGE 0 TO 255;
-		data_in		: IN INTEGER RANGE 0 TO 255;
-		data_out	: OUT INTEGER RANGE 0 TO 255;
-		mem_write	: IN std_logic;
-		rst			: IN std_logic
+entity memoria is
+	PORT(
+		clk : IN STD_LOGIC; 
+		reset, r_w : IN STD_LOGIC;
+		endereco : IN integer range 0 to 31;
+		leitura : OUT STD_LOGIC_VECTOR(4 downto 0);
+		escrita : IN STD_LOGIC_VECTOR(4 downto 0); 
+		dado_30 : OUT STD_LOGIC_VECTOR (4 downto 0)
 	);
-END memoria;
+end memoria;
 
-ARCHITECTURE Behavioral OF memoria IS
-	constant NOP : INTEGER := 0;
-	constant STA : INTEGER := 16;
-	constant LDA : INTEGER := 32;
-	constant ADD : INTEGER := 48;
-	constant IOR : INTEGER := 64;
-	constant IAND: INTEGER := 80;
-	constant INOT: INTEGER := 96;
-	constant SUB : INTEGER := 112;
-	constant JMP : INTEGER := 128;
-	constant JN  : INTEGER := 144;
-	constant JP  : INTEGER := 148;
-	constant JV  : INTEGER := 152;
-	constant JNV : INTEGER := 156;
-	constant JZ  : INTEGER := 160;
-	constant JNZ : INTEGER := 164;
-	constant JC  : INTEGER := 176;
-	constant JNC : INTEGER := 180;
-	constant JB  : INTEGER := 184;
-	constant JNB : INTEGER := 188;
-	constant SHR : INTEGER := 224;
-	constant SHL : INTEGER := 225;
-	constant IROR: INTEGER := 226;
-	constant IROL: INTEGER := 227;
-	constant HLT : INTEGER := 240;
-	
-	TYPE DATA IS ARRAY (0 TO 255) OF INTEGER;
-BEGIN
-	process (mem_write,rst)
-		VARIABLE DATA_ARRAY: DATA;
-	BEGIN
-		IF (RST='1') THEN
-			-- Contador decrescente de 10 (conte�do do endere�o 130) at� 0 
-			DATA_ARRAY(0) := LDA;	-- Carrega A com (130) (A=10)
-			DATA_ARRAY(1) := 130;	
-			DATA_ARRAY(2) := SUB;	-- Subtrai (132) de A (A=A-1)
-			DATA_ARRAY(3) := 132;
-			DATA_ARRAY(4) := JZ;	-- Salta para 8 se A=0
-			DATA_ARRAY(5) := 8;
-			DATA_ARRAY(6) := JMP;	-- Salta para o endere�o 2 (loop)
-			DATA_ARRAY(7) := 2;
-			-- Terminou a contagem, agora faz a soma de (130) com (131) e salva em (128)
-			DATA_ARRAY(8) := LDA;	-- Carrega A com (130) (A=10)
-			DATA_ARRAY(9) := 130;
-			DATA_ARRAY(10) := ADD;	-- Soma A com (131) (A=10+18)
-			DATA_ARRAY(11) := 131;
-			DATA_ARRAY(12) := STA;	-- Guarda A em (128)
-			DATA_ARRAY(13) := 128;
-			-- Agora faz um OR de (128) com (129) rotacionado 4 bits � esquerda, salva o resultado em (133)
-			DATA_ARRAY(14) := LDA;	-- Carrega A com (129)
-			DATA_ARRAY(15) := 129;
-			DATA_ARRAY(16) := SHL;	-- Desloca A 1 bit � esquerda (o LSB � zero)
-			DATA_ARRAY(17) := SHL;	-- Desloca A 1 bit � esquerda (o LSB � zero)
-			DATA_ARRAY(18) := SHL;	-- Desloca A 1 bit � esquerda (o LSB � zero)
-			DATA_ARRAY(19) := SHL;	-- Desloca A 1 bit � esquerda (o LSB � zero)
-			DATA_ARRAY(20) := IOR;	-- OU l�gico de A com (128)
-			DATA_ARRAY(21) := 128;
-			DATA_ARRAY(22) := STA;	-- Guarda o resultado em (133)
-			DATA_ARRAY(23) := 133;
-			DATA_ARRAY(24) := HLT;	-- P�ra o processamento
-			-- Vari�veis e constantes utilizadas no programa
-			DATA_ARRAY(128) := 0;
-			DATA_ARRAY(129) := 5;
-			DATA_ARRAY(130) := 10;
-			DATA_ARRAY(131) := 18;
-			DATA_ARRAY(132) := 1;
-		ELSIF (RISING_EDGE(MEM_WRITE)) THEN
-			DATA_ARRAY(ADDRESS_BUS) := DATA_IN;			
-		END IF;
-		DATA_OUT <= DATA_ARRAY(ADDRESS_BUS);
-	end process;
-END Behavioral;
+architecture Behavioral of memoria is
+
+	constant tam_mem: integer := 31;
+	type ram_type is array(0 to tam_mem) of STD_LOGIC_VECTOR(4 downto 0);
+
+	signal ram : ram_type := (
+		0 => "ZZZZZ", 
+		1 => "ZZZZZ", 
+		2 => "ZZZZZ",
+		others => "ZZZZZ"
+	);
+	signal leitura_r : std_logic_vector (4 downto 0) := (others => '0');
+
+begin
+
+dado_30 <= ram(30)(4 downto 0);
+
+	process(clk, reset, r_w)
+		begin
+			if (rising_edge(clk)) then
+				if reset = '1' then
+					ram <= (0 => 	"00001", -- MOV A, [END]
+							1 => 	"10011", -- 19
+							2 => 	"00100", -- MOV B, A
+							3 => 	"00001", -- MOV A, [END]
+							4 => 	"10010", -- 18
+							5 => 	"00110", -- SUB A, B
+							6 => 	"00010", -- MOV end, A
+							7 => 	"10010", -- 18
+							8 => 	"01101", -- JN
+							9 => 	"10001", -- 17
+							10 => 	"00001", -- MOV A, [END] 
+							11 => 	"11110", -- 30
+							12 => 	"10000",	--	INC A					
+							13 => 	"00010", -- MOV end, A
+							14 => 	"11110", -- 30
+							15 => 	"01111", -- JMP
+							16 => 	"00011", -- 3
+							17 => 	"01110", -- HALT
+							18 => 	"01010",	-- 10						
+							19 => 	"00010", -- 2
+							20 => 	"01110",
+							21 => 	"01101",
+							22 => 	"11110",
+							23 => 	"10010",
+							24 => 	"10010",
+							25 => 	"10010",
+							26 => 	"10010",
+							27 => 	"10010",
+							28 => 	"10010",
+							29 => 	"11111",
+							30 => 	"00000", -- 0
+							31 => 	"11111");
+				elsif (r_w = '1') then
+					leitura_r <= ram(endereco);
+				else 
+					ram(endereco) <= escrita;
+				end if;
+			end if;
+		end process;
+	leitura <= leitura_r;
+end Behavioral;
